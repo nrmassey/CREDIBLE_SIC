@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# run the python scripts to calculate the polynomial mapping for the year ranges for
+# both the HadISST and CMIP5 component of the long runs
+#for yr in 1899 1909 1919 1929 1939 1949 1959 1969 1979 1989 1999;
+#do
+#    let yr2=$yr+11
+#    echo $yr  $yr2
+#    ./create_HadISST_SST_SIC_mapping.py -s $yr -e $yr2 -n 400 -d 4
+#done
+
+#./create_CMIP5_SST_SIC_mapping.py -s 2006 -e 2020 -r rcp45 -d 4
+
+#for yr in 2019 2029 2039 2049 2059 2069 2079 2089;
+#do
+#    let yr2=$yr+11
+#    echo $yr  $yr2
+#    ./create_CMIP5_SST_SIC_mapping.py -s $yr -e $yr2 -r rcp45 -d 4
+#done
+
+MAX_DEG=3
+
+yr1=1899
+yr2=1940
+./create_HadISST_SST_SIC_mapping.py -s $yr1 -e $yr2 -n 400 -d $MAX_DEG
+yr1=1929
+yr2=1970
+./create_HadISST_SST_SIC_mapping.py -s $yr1 -e $yr2 -n 400 -d $MAX_DEG
+yr1=1959
+yr2=2000
+./create_HadISST_SST_SIC_mapping.py -s $yr1 -e $yr2 -n 400 -d $MAX_DEG
+yr1=1989
+yr2=2010
+./create_HadISST_SST_SIC_mapping.py -s $yr1 -e $yr2 -n 400 -d $MAX_DEG
+
+
+yr1=2006
+yr2=2040
+./create_CMIP5_SST_SIC_mapping.py -s $yr1 -e $yr2 -r rcp45 -d $MAX_DEG
+yr1=2039
+yr2=2070
+./create_CMIP5_SST_SIC_mapping.py -s $yr1 -e $yr2 -r rcp45 -d $MAX_DEG
+yr1=2059
+yr2=2100
+./create_CMIP5_SST_SIC_mapping.py -s $yr1 -e $yr2 -r rcp45 -d $MAX_DEG
