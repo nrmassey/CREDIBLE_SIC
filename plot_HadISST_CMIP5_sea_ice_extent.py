@@ -38,19 +38,21 @@ def plot_SST_SIC_extent(sst_fname, sic_fname, hadisst_fname):
     lon_var = sst_fh.variables["longitude"]
     had_sic_var = had_fh.variables["sic"]
     had_sst_var = had_fh.variables["sst"]
+    mv = sic_var._attributes["_FillValue"]
     
     sst_data = sst_var[:]
-    sic_data = sic_var[:]
-    had_sic_data = had_sic_var[:]
+    sic_data = numpy.array(sic_var[:])
+    sic_data[(sic_data < 1e6) & (sic_data > 1.0)] = 1.0
+    sic_data[(sic_data < 0.0)] = mv
+
+    had_sic_data = had_sic_var[:] 
     had_sst_data = had_sst_var[:]
     lat_data = lat_var[:]
     d_lon = lon_var[1] - lon_var[0]
-    mv = sic_var._attributes["_FillValue"]
     
     # calculate the sea-ice extent
     sic_arctic, sic_antarctic = calc_sea_ice_extent(sic_data, lat_data, d_lon, mv, 1e-6)
     had_sic_arctic, had_sic_antarctic = calc_sea_ice_extent(had_sic_data, lat_data, d_lon, mv, 1e-6)
-    
     sst_arctic, sst_antarctic = calc_sst_arctic_means(sst_data, lat_data, d_lon, mv)
     had_sst_arctic, had_sst_antarctic = calc_sst_arctic_means(had_sst_data, lat_data, d_lon, mv)
     
@@ -62,20 +64,21 @@ def plot_SST_SIC_extent(sst_fname, sic_fname, hadisst_fname):
     sp3 = sp2.twinx()
     x = [1899 + 1.0/12*i for i in range(0, sst_data.shape[0])]
     x2 =[1850 + 1.0/12*i for i in range(0, had_sst_data.shape[0])]
-    print had_sst_data.shape[0]
 #    for m in range(0,12):
     if True:
-        m = 6
+        m=1
         sp1.plot(x[m::12], sic_arctic[m::12], 'r')
         sp3.plot(x[m::12], sic_antarctic[m::12], 'b')
         sp1.plot(x2[m::12], had_sic_arctic[m::12], 'k')
         sp3.plot(x2[m::12], had_sic_antarctic[m::12], '#808080')
+            
+#        sp0.plot(x[m::12], sst_arctic[m::12], 'r', lw=2.0)
+#        sp2.plot(x[m::12], sst_antarctic[m::12], 'b', lw=2.0)
+#        sp0.plot(x2[m::12], had_sst_arctic[m::12], 'k', lw=2.0)
+#        sp2.plot(x2[m::12], had_sst_antarctic[m::12], '#808080', lw=2.0)
         
-        sp0.plot(x[m::12], sst_arctic[m::12], 'r', lw=2.0)
-        sp2.plot(x[m::12], sst_antarctic[m::12], 'b', lw=2.0)
-        sp0.plot(x2[m-1::12], had_sst_arctic[m::12], 'k', lw=2.0)
-        sp2.plot(x2[m-1::12], had_sst_antarctic[m::12], '#808080', lw=2.0)
-        
+    sp1.set_ylim([0,1100])
+    sp3.set_ylim([0,600])
     plt.show()
     
     sst_fh.close()
@@ -120,11 +123,11 @@ if __name__ == "__main__":
             
     # get the SST and SIC names
     sst_fname = get_syn_sst_filename(run_type, ref_start, ref_end, neofs, eof_year, sample, intvarmode, monthly)
-    print sst_fname
     sic_fname = sst_fname.replace("ssts", "sic")[:-3] + "_" + str(deg) + ".nc"
+    print sst_fname
+    print sic_fname
     histo_sy, histo_ey, rcp_sy, rcp_ey = get_start_end_periods()
     hadisst_ey = 2010
-#    hadisst_fname = get_HadISST_month_smooth_filename(histo_sy, hadisst_ey, 400)
     hadisst_fname = get_HadISST_input_filename(400)
     print hadisst_fname
     

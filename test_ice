@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+for ((yr=1899;yr<=1999;yr+=10));
+do
+    yr2=$(($yr+11))
+done

@@ -1,2 +1,6 @@
 
 *.pyc
+
+*.nc
+
+EU_Domain.txt

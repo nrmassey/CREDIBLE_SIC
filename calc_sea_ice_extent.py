@@ -75,7 +75,6 @@ def calc_sst_arctic_means(sst_data, lats, d_lon, mv):
 
     # mask the sst data
     sst_data_mv = numpy.ma.masked_equal(sst_data, mv)
-    print sst_data_mv.shape
     # calculate the sst multiplied by the area for each grid box
     sst_area = sst_data_mv * grid_areas
     # now calc the arctic and antarctic mean SST

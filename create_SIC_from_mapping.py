@@ -27,13 +27,64 @@ sys.path.append("../CREDIBLE_SST")
 sys.path.append("/Users/Neil/python_lib")
 from create_HadISST_SST_SIC_mapping import *
 from window_smooth import window_smooth_3D
+from scipy import interpolate
 
 from netcdf_file import *
 import datetime
 
 #############################################################################
 
-def create_SIC_from_mapping(sst_data, time, fit_data, deg_data, mv, anoms=False):
+def create_coefficient_splines(sst_sic_map, m, lat, lon, mv):
+    # create the coefficient values that has been interpolated using a spline
+    # over the time period between the start and end year
+    
+    # start / end of different datasets
+    hadisst_sy = 1899
+    cmip5_sy = 2006
+    cmip5_ey = 2100
+
+    # years and periods
+    years = get_year_intervals()
+    
+    # number of current coefficients / intervals
+    N = len(years)
+    # array to hold the years
+    y_s = numpy.zeros([N,], 'f')
+    # numpy arrays of coefficients - two as we're just doing a linear fit
+    coeffs = numpy.zeros([2, N], 'f')
+
+    # counter into the fit coefficients
+    y1 = 0
+    y2 = 0
+    for y in years:
+        # calculate the mid year of the period
+        y_s[y1] = (years[y1][0] + years[y1][1])*0.5
+        # assign the coefficients
+        if y[0] < 2006:
+            coeffs[:,y1] = sst_sic_map[0][:,y1,m,lat,lon]
+        else:
+            coeffs[:,y1] = sst_sic_map[2][:,y2,m,lat,lon]
+            y2 +=1
+        y1+=1
+
+    # if it's the missing value than reset to zero
+    coeffs[coeffs==mv] = 0.0
+    # now interpolate using a smoothed spline
+    y_new = numpy.arange(hadisst_sy, cmip5_ey+1)
+    # new coefficients
+    new_coeffs = numpy.zeros([2, y_new.shape[0]], 'f')
+    for c in range(0, 2):
+        s = interpolate.UnivariateSpline(y_s, coeffs[c], s=0)
+        new_coeffs[c,:] = s(y_new)
+        # overwrite the end and beginning coefficients
+        new_coeffs[c,0:6] = coeffs[c,0]
+        new_coeffs[c,-6:] = coeffs[c,-1]
+    
+    return new_coeffs
+
+#############################################################################
+
+def create_SIC_from_mapping(sst_data, time, sst_sic_map, mv, anoms=True):
     # create the output for the sic - same shape as the sst input
     sic_out = numpy.zeros(sst_data.shape, 'f')
 
@@ -44,35 +95,14 @@ def create_SIC_from_mapping(sst_data, time, fit_data, deg_data, mv, anoms=False)
         sd = bd + datetime.timedelta(time[m])
         for lat in range(0, sst_data.shape[1]):
             for lon in range(0, sst_data.shape[2]):
+                # create the coefficient values for this grid box and month
+                cf_vals = create_coefficient_splines(sst_sic_map, m, lat, lon, mv)
                 # get the sst values - a slice through all the months for the current month
-                sst_V = sst_data[m::12,lat,lon]                
-                # get the number of degrees for the polyfit
-                n_degs = deg_data[m, lat, lon]
-                # get the polyfit coefficients
-                p_fit = fit_data[:, m, lat, lon]
-                if n_degs > 0:
-                    # calculate the sic concentration
-                    sic_V = calc_polynomial(p_fit, sst_V, n_degs)
-                    sic_V[numpy.isnan(sic_V)] = mv
-                    if not anoms:
-                        sic_V[sic_V > 1.0] = 1.0
-                        sic_V[sic_V < 0.0] = 0.0            # 0.0 cutoff to mirror that of 
-                                                            # calculating CMIP5 ensemble mean
-                    sic_out[m::12, lat, lon] = sic_V
+                sst_V = sst_data[m::12,lat,lon]
+                if(sst_V[0] == mv):
+                    sic_out[m::12, lat, lon] = mv
                 else:
-                    sic_out[m::12, lat, lon] = 0.0
-
-    # remove isolated pixels
-#    for t in range(0, sic_out.shape[0]):
-#        for lat in range(1, sic_out.shape[1]-1):
-#            for lon in range(0, sic_out.shape[2]):
-#                if sic_out[t,lat,lon] != 0.0 and sic_out[t,lat-1,lon] == 0.0 and sic_out[t,lat+1,lon] == 0.0:
-#                    sic_out[t,lat,lon] = 0.0
-    
-    # smooth the data with a longitudinal smoother
-#    weights = numpy.ones([1,3,1],'f')      # longitudinal smoother
-#    smoothed_sic = window_smooth_3D(sic_out, weights, mv, smooth_zero=False)
-#    sic_out = smoothed_sic
+                    sic_out[m::12, lat, lon] = sst_V * cf_vals[0] + cf_vals[1]
     return sic_out
 
 #############################################################################
