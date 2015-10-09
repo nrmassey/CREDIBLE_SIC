@@ -1,7 +1,7 @@
 #! /usr/bin/env python  
 #############################################################################
 #
-# Program : create_HadISST_CMIP5_SIC_from_SST.py
+# Program : plot_HadISST_CMIP5_sea_ice_extent.py
 # Author  : Neil Massey
 # Purpose : 
 # Inputs  : 
@@ -42,8 +42,6 @@ def plot_SST_SIC_extent(sst_fname, sic_fname, hadisst_fname):
     
     sst_data = sst_var[:]
     sic_data = numpy.array(sic_var[:])
-    sic_data[(sic_data < 1e6) & (sic_data > 1.0)] = 1.0
-    sic_data[(sic_data < 0.0)] = mv
 
     had_sic_data = had_sic_var[:] 
     had_sst_data = had_sst_var[:]
@@ -62,23 +60,26 @@ def plot_SST_SIC_extent(sst_fname, sic_fname, hadisst_fname):
     sp1 = sp0.twinx()
     sp2 = plt.subplot(gs[1,:])
     sp3 = sp2.twinx()
-    x = [1899 + 1.0/12*i for i in range(0, sst_data.shape[0])]
+    x = [1900 + 1.0/12*i for i in range(0, sst_data.shape[0]-12)]
     x2 =[1850 + 1.0/12*i for i in range(0, had_sst_data.shape[0])]
+    l="-"
 #    for m in range(0,12):
     if True:
-        m=1
-        sp1.plot(x[m::12], sic_arctic[m::12], 'r')
-        sp3.plot(x[m::12], sic_antarctic[m::12], 'b')
-        sp1.plot(x2[m::12], had_sic_arctic[m::12], 'k')
-        sp3.plot(x2[m::12], had_sic_antarctic[m::12], '#808080')
+        m = 1
+        print len(x[m::12]), sic_arctic[m::12].shape
+        sp1.plot(x[m::12], sic_arctic[m::12], 'r'+l)
+        sp3.plot(x[m::12], sic_antarctic[m::12], 'b'+l)
+#        sp1.plot(x2[m::12], had_sic_arctic[m::12], 'k'+l)
+#        sp3.plot(x2[m::12], had_sic_antarctic[m::12], '#808080')
             
-#        sp0.plot(x[m::12], sst_arctic[m::12], 'r', lw=2.0)
-#        sp2.plot(x[m::12], sst_antarctic[m::12], 'b', lw=2.0)
-#        sp0.plot(x2[m::12], had_sst_arctic[m::12], 'k', lw=2.0)
+#        sp0.plot(x[m::12], sst_arctic[m::12], 'r'+l, lw=2.0)
+#        sp2.plot(x[m::12], sst_antarctic[m::12], 'b'+l, lw=2.0)
+#        sp0.plot(x2[m::12], had_sst_arctic[m::12], 'k'+l, lw=2.0)
 #        sp2.plot(x2[m::12], had_sst_antarctic[m::12], '#808080', lw=2.0)
+        l = "--"
         
-    sp1.set_ylim([0,1100])
-    sp3.set_ylim([0,600])
+#    sp1.set_ylim([0,1100])
+#    sp3.set_ylim([0,600])
     plt.show()
     
     sst_fh.close()
@@ -98,8 +99,8 @@ if __name__ == "__main__":
     monthly = False     # use the monthly EOFs / PCs ?
     deg = 1
     opts, args = getopt.getopt(sys.argv[1:], 'r:s:e:n:f:a:i:v:d:m',
-                               ['run_type=', 'ref_start=', 'ref_end=', 'neofs=', 'eof_year=', 'sample=', 'intvarmode=',
-                                'varneofs=', 'monthly', 'degree'])
+                               ['run_type=', 'ref_start=', 'ref_end=', 'neofs=', 'eof_year=', 'sample=',
+                                'intvarmode=', 'varneofs=', 'monthly', 'degree'])
 
     for opt, val in opts:
         if opt in ['--run_type', '-r']:
@@ -123,7 +124,8 @@ if __name__ == "__main__":
             
     # get the SST and SIC names
     sst_fname = get_syn_sst_filename(run_type, ref_start, ref_end, neofs, eof_year, sample, intvarmode, monthly)
-    sic_fname = sst_fname.replace("ssts", "sic")[:-3] + "_" + str(deg) + ".nc"
+    sic_fname = sst_fname.replace("ssts", "sic")[:-3] + ".nc"
+    sic_fname = sic_fname.replace("sst", "sic")
     print sst_fname
     print sic_fname
     histo_sy, histo_ey, rcp_sy, rcp_ey = get_start_end_periods()

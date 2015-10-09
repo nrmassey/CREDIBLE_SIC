@@ -29,13 +29,12 @@ Returns    : area in metres squared"""
     lats2_rad = numpy.radians(lats) + d_lat * 0.5
     lats1_rad = numpy.radians(lats) - d_lat * 0.5
     d_lon_rad = numpy.radians(d_lon)
-
     areas = r**2*d_lon_rad * (numpy.sin(lats2_rad) - numpy.sin(lats1_rad))
     return areas
 
 #############################################################################
 
-def calc_sea_ice_extent(sic_data, lats, d_lon, mv, S=1.0):
+def calc_sea_ice_extent(sic_data, lats, d_lon, mv, S=1.0, grid_areas=None):
     # calculate the sea ice extent by multiplying the fractional sea-ice
     # coverage by the grid box area and the summing over the arctic and
     # antarctic separately
@@ -43,8 +42,9 @@ def calc_sea_ice_extent(sic_data, lats, d_lon, mv, S=1.0):
     # half the number of latitudes
     n_lats2 = lats.shape[0] * 0.5
     # calculate grid areas and reshape to the sic_data shape
-    grid_areas = calc_grid_areas(lats, d_lon)
-    grid_areas = grid_areas.reshape([1, grid_areas.shape[0], 1])
+    if grid_areas is None:
+        grid_areas = calc_grid_areas(lats, d_lon)
+        grid_areas = grid_areas.reshape([1, grid_areas.shape[0], 1])
     
     # mask the sic_data
     sic_data_mv = numpy.ma.masked_equal(sic_data, mv)

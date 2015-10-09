@@ -38,7 +38,7 @@ cpdef remove_isolated_ice(numpy.ndarray[float, ndim=3] data, float mv=2e20):
             for x in range(0, nx):
                 V = data[t,y,x]
                 if V == mv:
-                    out_data[t,y,x] = V
+                    out_data[t,y,x] = mv
                     continue
                 V0 = data[t,y-1,x]
                 V1 = data[t,y+1,x]
