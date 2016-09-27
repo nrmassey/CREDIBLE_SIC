@@ -47,13 +47,12 @@ def plot_SST_SIC_extent(sst_fname, sic_fname, hadisst_fname):
     had_sst_data = had_sst_var[:]
     lat_data = lat_var[:]
     d_lon = lon_var[1] - lon_var[0]
-    
+
     # calculate the sea-ice extent
     sic_arctic, sic_antarctic = calc_sea_ice_extent(sic_data, lat_data, d_lon, mv, 1e-6)
     had_sic_arctic, had_sic_antarctic = calc_sea_ice_extent(had_sic_data, lat_data, d_lon, mv, 1e-6)
     sst_arctic, sst_antarctic = calc_sst_arctic_means(sst_data, lat_data, d_lon, mv)
     had_sst_arctic, had_sst_antarctic = calc_sst_arctic_means(had_sst_data, lat_data, d_lon, mv)
-    
     gs = gridspec.GridSpec(2,10)
     
     sp0 = plt.subplot(gs[0,:])
@@ -63,20 +62,22 @@ def plot_SST_SIC_extent(sst_fname, sic_fname, hadisst_fname):
     x = [1900 + 1.0/12*i for i in range(0, sst_data.shape[0]-12)]
     x2 =[1850 + 1.0/12*i for i in range(0, had_sst_data.shape[0])]
     l="-"
+    sic_arctic = sic_arctic[:-12]
+    sic_antarctic = sic_antarctic[:-12]
 #    for m in range(0,12):
     if True:
-        m = 1
+        m = 0
         print len(x[m::12]), sic_arctic[m::12].shape
-        sp1.plot(x[m::12], sic_arctic[m::12], 'r'+l)
-        sp3.plot(x[m::12], sic_antarctic[m::12], 'b'+l)
-#        sp1.plot(x2[m::12], had_sic_arctic[m::12], 'k'+l)
-#        sp3.plot(x2[m::12], had_sic_antarctic[m::12], '#808080')
+        sp1.plot(x[m::12], sic_arctic[m::12]*1.1, 'r'+l)
+        sp3.plot(x[m::12], sic_antarctic[m::12]*1.1, 'r'+l)
+        sp1.plot(x2[m::12], had_sic_arctic[m::12], 'k'+l)
+        sp3.plot(x2[m::12], had_sic_antarctic[m::12], '#808080')
             
 #        sp0.plot(x[m::12], sst_arctic[m::12], 'r'+l, lw=2.0)
 #        sp2.plot(x[m::12], sst_antarctic[m::12], 'b'+l, lw=2.0)
 #        sp0.plot(x2[m::12], had_sst_arctic[m::12], 'k'+l, lw=2.0)
 #        sp2.plot(x2[m::12], had_sst_antarctic[m::12], '#808080', lw=2.0)
-        l = "--"
+#        l = "--"
         
 #    sp1.set_ylim([0,1100])
 #    sp3.set_ylim([0,600])

@@ -51,14 +51,14 @@ cpdef fill_ice(numpy.ndarray[float, ndim=3] data, float mv=2e20):
                         V0 = data[t,y+j,x+i]
                         # get the number of surrounding grid points that are either
                         # less than or greater than the current grid point
-                        if (V0 >= 0.001 or V0 == mv):      # missing value counts as non-zero
+                        if V0 >= 0.001 or V0 == mv:
                             nnz += 1
                             if V0 != mv:
-                                sum_V += V0
                                 sum_W += 1
-                # do the averaging if nx >=6 or ny >=6 - i.e. this grid box is
-                # surrounded on all but two sides by non-zero or mv grid boxes
-                if nnz >= 6 and sum_W != 0:
+                                sum_V += V0
+                # do the averaging if nx >=5 or ny >=5 - i.e. this grid box is
+                # surrounded on all but one sides by non-zero or mv grid boxes
+                if nnz >= 5 and sum_W != 0:
                     out_data[t,y,x] = sum_V / sum_W
                 else:
                     out_data[t,y,x] = 0

@@ -23,13 +23,14 @@
 
 import numpy
 from scipy import interpolate
-from netcdf_file import *
+from scipy.io.netcdf import *
 
 ##############################################################################
 
 def calc_sic_mapping(sst_data, sic_data, mv, n_degs=2):
     # calculate the mapping between sst and sic for each grid point
     n_map = sst_data.shape[0] / (10*12) # one mapping per decade
+    print sst_data.shape[0]
     n_lat = sst_data.shape[1]
     n_lon = sst_data.shape[2]
     mapping = numpy.zeros([n_map, n_degs+1, 12, n_lat, n_lon], 'f')
@@ -37,6 +38,7 @@ def calc_sic_mapping(sst_data, sic_data, mv, n_degs=2):
     for m in range(0, 12):
         for lat in range(0, n_lat):
             for lon in range(0, n_lon):
+                # get monthly data for this latitude--longitude
                 lsst_data = sst_data[m::12,lat,lon]
                 lsic_data = sic_data[m::12,lat,lon]
                 if lsic_data[0] != mv:
@@ -82,8 +84,9 @@ def calc_sic_from_sst(sst_data, mapping, mv, n_degs=2):
     X = numpy.zeros([n_map+2])
     X[-1] = n_map * 10
     X[1:-1] = numpy.arange(0,n_map)*10+5
+    Sc = float(X[-1]-X[0]+1) / (sst_data.shape[0]/12)
     
-    X_s = numpy.arange(X[0], X[-1]+1)
+    X_s = numpy.arange(X[0], X[-1], Sc)
     # calculate the mappings per month and grid box
     for m in range(0, 12):
         for lat in range(0, n_lat):
@@ -103,14 +106,21 @@ def calc_sic_from_sst(sst_data, mapping, mv, n_degs=2):
                     C[1:-1] = M
                     C[-1] = M[-1]
                     s = interpolate.interp1d(X, C, kind="linear")
-                    new_coeffs[c,:] = s(X_s)
+                    new_coeffs[c] = s(X_s)
+                # copy the coefficients to last point
+                new_coeffs[:,-1] = new_coeffs[:,-2]
                 # reconstruct
                 V = 0
                 for p in range(0, n_degs+1):
-                    V += (lsst_data)**(n_degs-p) * new_coeffs[p,:]
+                    E = new_coeffs.shape[1]
+                    V += (lsst_data[:E])**(n_degs-p) * new_coeffs[p,:]
                 if numpy.isnan(V).any():
                     V[:] = mv
-                out_sic[m::12,lat,lon] = V
+                S = V.shape[0]*12
+                out_sic[m:S:12,lat,lon] = V
+    # fill in the last year as the same as the penultimate year
+    for m in range(0,12):
+        out_sic[-12+m] = out_sic[-24+m]
     return out_sic
     
 ########################################################################################
@@ -161,7 +171,6 @@ def save_mapping(out_fname, mapping, in_lat_var, in_lon_var, years, mv, n_degs=2
     data_out_var[:] = mapping[:]
     degrees_out_var[:] = n_degs
     out_fh.close() 
-    print out_fname
     
 #############################################################################
 

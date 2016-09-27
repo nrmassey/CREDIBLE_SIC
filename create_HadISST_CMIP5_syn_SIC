@@ -1,14 +1,18 @@
 # shell script to create Sea ice from sst to sea-ice mapping
+# $1 = rcp scenario
+# $2 = percentile sample - 10 25 50 75 90
+# $3 = response pattern sample 0 4 9 14 19
+# $4 = mapping file degrees 0 1
 
 MAP=rcp45
 
-INPUT_FILE=/Users/Neil/Coding/CREDIBLE_output/output/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050/varmon/sst/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050_f2050_n6_a$2""_varmon_ssts_mon.nc.gz
-OUTPUT_FILE=/Users/Neil/Coding/CREDIBLE_output/output/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050/varmon/sic/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050_f2050_n6_a$2""_varmon_sic_mon.nc
-MAPPING_FILE=/Users/Neil/Coding/CREDIBLE_output/output/$MAP""_2006_2100/cmip5_polyfit_$MAP""_2006_2100_$3""_anoms.nc
+INPUT_FILE=/Users/Neil/Coding/CREDIBLE_output/output/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050/varmon/sst/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050_n6_a$2""_varmon_ssts_mon_s$3"".nc.gz
+OUTPUT_FILE=/Users/Neil/Coding/CREDIBLE_output/output/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050/varmon/sic/HadISST_1899_2005_$1""_2006_2100_r1986_2005_y2050_n6_a$2""_varmon_sic_mon_s$3"".nc
+MAPPING_FILE=/Users/Neil/Coding/CREDIBLE_output/output/$MAP""_2006_2100/cmip5_polyfit_$MAP""_2006_2100_$4""_anoms.nc
 GUNZIPPED_INPUT_FILE=${INPUT_FILE/.gz/""}
 #gunzip $INPUT_FILE
 
-./create_HadISST_CMIP5_syn_sic.py -i $GUNZIPPED_INPUT_FILE -o $OUTPUT_FILE -f $MAPPING_FILE -d $3
+./create_HadISST_CMIP5_syn_sic.py -i $GUNZIPPED_INPUT_FILE -o $OUTPUT_FILE -f $MAPPING_FILE -d $4
 
 #gzip $GUNZIPPED_INPUT_FILE
 #gzip $OUTPUT_FILE

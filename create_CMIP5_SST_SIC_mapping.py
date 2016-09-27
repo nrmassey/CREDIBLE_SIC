@@ -53,13 +53,16 @@ def get_CMIP5_ens_mean_directory(run_type, ref_start, ref_end):
 
 def get_CMIP5_ens_mean_anom_filename(run_type, ref_start, ref_end, var, hemi):
     # input path
-    parent_dir = get_CMIP5_ens_mean_directory(run_type, ref_start, ref_end)+"/"+var
+    parent_dir = get_CMIP5_ens_mean_directory(run_type, ref_start, ref_end)+"/"
     if var == "tos":
         model = "Omon"
+        parent_dir += "concat_sst_anoms"
     elif var == "sic":
         model = "OImon"
-        
-    cmip5_ens_mean_name = "atlas_"+var+"_"+model+"_"+hemi+"_"+run_type+"_ens_mean_"+str(ref_start)+"01-"+str(ref_end)+"12_1x1"
+        parent_dir += "concat_sic_anoms"
+    sst_start = 2006
+    sst_end = 2100
+    cmip5_ens_mean_name = "atlas_"+var+"_"+model+"_"+hemi+"_"+run_type+"_ens_mean_"+str(sst_start)+"01-"+str(sst_end)+"12_1x1"
     cmip5_ens_mean_name += "_anoms.nc"
     
     return parent_dir + "/" + cmip5_ens_mean_name
@@ -68,8 +71,8 @@ def get_CMIP5_ens_mean_anom_filename(run_type, ref_start, ref_end, var, hemi):
 
 def load_CMIP5_anom_data(run_type):
     # load the HadISST file - get the name from the run number
-    ref_start = 2006
-    ref_end = 2100
+    ref_start = 1986
+    ref_end = 2005
     
     # get the filenames
     cmip5_sic_arctic_anom_name = get_CMIP5_ens_mean_anom_filename(run_type, ref_start, ref_end, "sic", "arctic")
@@ -91,14 +94,14 @@ def load_CMIP5_anom_data(run_type):
     
     # amalgamate the data into one array, splitting at the equator and copying the
     # arctic data into the NH and the antarctic data into the SH
-#    ant_s = cmip5_sic_arctic_anoms.shape[1] / 2
+    ant_s = cmip5_sic_arctic_anoms.shape[1] / 2
 
-#    cmip5_sic_arctic_anoms[:,ant_s:,:] = cmip5_sic_antarctic_anoms[:,ant_s:,:]
-#    cmip5_tos_arctic_anoms[:,ant_s:,:] = cmip5_tos_antarctic_anoms[:,ant_s:,:]
+    cmip5_sic_arctic_anoms[:,ant_s:,:] = cmip5_sic_antarctic_anoms[:,ant_s:,:]
+    cmip5_tos_arctic_anoms[:,ant_s:,:] = cmip5_tos_antarctic_anoms[:,ant_s:,:]
     
     # trim the first 4 years - we only want 2010 to 2100
-    S = 12 * (2010-2006)
-    S = 0
+#    S = 12 * (2010-2006)
+    S=0
     cmip5_tos_anom_data = cmip5_tos_arctic_anoms[S:]
     cmip5_sic_anom_data = cmip5_sic_arctic_anoms[S:]
     
@@ -117,8 +120,8 @@ def get_CMIP5_SST_SIC_mapping_fname(start, end, run_type, deg):
 #############################################################################
 
 def get_CMIP5_lon_lat_vars(run_type):
-    ref_start = 2006
-    ref_end = 2100
+    ref_start = 1986
+    ref_end = 2005
     cmip5_sic_arctic_anom_name = get_CMIP5_ens_mean_anom_filename(run_type, ref_start, ref_end, "sic", "arctic")
     fh = netcdf_file(cmip5_sic_arctic_anom_name)
     
@@ -134,11 +137,9 @@ def create_CMIP5_SST_SIC_mapping(run_type, deg):
             
     # year intervals
     years = [[y, y+10] for y in range(2010,2100,10)]
-    cmip5_tos_sub = cmip5_tos_anoms
-    cmip5_sic_sub = cmip5_sic_anoms
     
     # calculate the mapping
-    mapping = calc_sic_mapping(cmip5_tos_sub, cmip5_sic_sub, mv, deg)
+    mapping = calc_sic_mapping(cmip5_tos_anoms, cmip5_sic_anoms, mv, deg)
     
     # get the output filename
     out_name = get_CMIP5_SST_SIC_mapping_fname(2006, years[-1][1], run_type, deg)

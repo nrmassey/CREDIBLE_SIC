@@ -35,6 +35,7 @@ sys.path.append("../CREDIBLE_SST")
 from cmip5_functions import load_data, get_missing_value
 from create_HadISST_sst_anoms import get_HadISST_input_filename, get_HadISST_output_directory 
 from sst_sic_mapping import *
+from cdo import *
 
 import numpy
 from netcdf_file import *
@@ -102,6 +103,22 @@ def get_HadISST_lon_lat_vars(rn):
 
 ########################################################################################
 
+def create_HadISST_SST_SIC_monthly_anoms(rn):
+    start = 1899
+    end = 2010
+
+    hadisst_fname = get_HadISST_input_filename(rn)
+    sst_anom_fname, sic_anom_fname = get_HadISST_monthly_anomaly_filenames(start, end, rn)
+    # do the sst anoms
+    cdo = Cdo()
+    sst_cdo_string=" -ymonmean -selvar,sst -selyear,"+str(1986)+"/"+str(2005)+" " +hadisst_fname
+    cdo.ymonsub(input=" -selvar,sst "+ hadisst_fname + sst_cdo_string, output=sst_anom_fname)
+
+    sic_cdo_string=" -ymonmean -selvar,sic -selyear,"+str(1986)+"/"+str(2005)+" " +hadisst_fname
+    cdo.ymonsub(input=" -selvar,sic "+ hadisst_fname + sic_cdo_string, output=sic_anom_fname)
+
+########################################################################################
+
 def create_HadISST_SST_SIC_mapping(rn, deg):
     # load the anomalies from the yearly month means of 1986->2010
     sst_anom_data, sic_anom_data, mv = load_HadISST_anom_data(rn)
@@ -115,8 +132,6 @@ def create_HadISST_SST_SIC_mapping(rn, deg):
     # calculate the mapping between the anomalies
     mapping = calc_sic_mapping(sst_anom_data, sic_anom_data, mv, deg)
     
-    # get the output filename
-    out_name = get_HadISST_SST_SIC_mapping_fname(years[0][0], years[-1][1], rn, deg)
     # save the polyfits
     lon_var, lat_var = get_HadISST_lon_lat_vars(rn)
     save_mapping(out_name, mapping, lat_var, lon_var, years, mv, deg)
@@ -134,5 +149,6 @@ if __name__ == "__main__":
             run_n = val
         if opt in ['--deg', '-d']:
             deg = int(val)
-            
+    
+    create_HadISST_SST_SIC_monthly_anoms(run_n)
     create_HadISST_SST_SIC_mapping(run_n, deg)
